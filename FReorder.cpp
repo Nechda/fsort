@@ -43,11 +43,6 @@ void FReorder::build_cfg() {
     }
 }
 
-void FReorder::run_on_cluster([[maybe_unused]] cluster &c) {
-    // TODO: implement ann alogrithm
-    return;
-}
-
 void FReorder::run(std::string_view ouput_file) && {
     // Step 1. Build actual call-graph from freq-table
     build_cfg();
