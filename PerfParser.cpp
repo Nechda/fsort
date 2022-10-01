@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -156,7 +157,30 @@ const std::string &get_formated_command(std::string_view command, uint64_t perio
 
 } // namespace
 
-PerfParser::FreqTable PerfParser::get_control_flow_graph() && {
+/*
+    pattern of line:
+        `caller`/`callee`/`count`
+    exmple:
+        foo/bar/10
+*/
+
+PerfParser::FreqTable PerfParser::read_from_file(std::string filename) {
+    std::ifstream in(filename);
+    std::string buf;
+    FreqTable table;
+    while (std::getline(in, buf)) {
+        auto start = buf.find_first_of('/');
+        auto stop = buf.find_last_of('/');
+
+        auto caller = std::string(buf.substr(0, start));
+        auto callee = std::string(buf.substr(start + 1, stop - start - 1));
+        auto count = std::atoi(buf.substr(stop + 1).c_str());
+        table[{caller, callee}] = count;
+    }
+    return table;
+}
+
+PerfParser::FreqTable PerfParser::get_control_flow_graph(std::string output_filename) && {
     FreqTable table;
     for (uint64_t i = 0; i < n_runs_; i++) {
         constexpr uint64_t LOW_PERIOD = 250'000;
@@ -169,5 +193,11 @@ PerfParser::FreqTable PerfParser::get_control_flow_graph() && {
         auto traces = execute();
         update_table(table, traces);
     }
+
+    std::ofstream output(output_filename);
+    for (auto &[arc, weidth] : table) {
+        output << arc.first << '/' << arc.second << '/' << weidth << '\n';
+    }
+
     return table;
 }

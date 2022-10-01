@@ -4,6 +4,7 @@
 
 #include <charconv>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 
 struct Config {
@@ -85,10 +86,14 @@ int main(int argc, char **argv) {
 
     auto symbols = NMParser(config.binary_file).get_symbols();
 
+    PerfParser::FreqTable freq_table;
     const std::string SAVED_PROFILE_FILE{"saved.edges"};
-    // TODO: implement reading from saved file
-
-    auto freq_table = PerfParser(config.command, config.repeat_times, config.delta).get_control_flow_graph();
+    if (std::filesystem::exists(SAVED_PROFILE_FILE)) {
+        freq_table = PerfParser::read_from_file(SAVED_PROFILE_FILE);
+    } else {
+        freq_table =
+            PerfParser(config.command, config.repeat_times, config.delta).get_control_flow_graph(SAVED_PROFILE_FILE);
+    }
 
     FReorder(std::move(symbols), std::move(freq_table)).run(config.output_file);
 

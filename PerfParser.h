@@ -13,7 +13,9 @@ struct PerfParser {
     PerfParser(std::string_view command, uint64_t n_runs, uint64_t delta)
         : command_{command}, n_runs_{n_runs}, period_delta_{delta} {}
 
-    FreqTable get_control_flow_graph() &&;
+    FreqTable get_control_flow_graph(std::string output_filename) &&;
+
+    static FreqTable read_from_file(std::string filename);
 
   private:
     std::string_view command_;
