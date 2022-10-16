@@ -14,9 +14,7 @@ struct FReorder {
     NMParser::SymTable symtable_;
     PerfParser::FreqTable freq_table_;
 
-    std::vector<node> vertices_;
-    std::vector<edge *> edges_;
-
-    void build_cfg();
+    CallGraph build_cfg();
+    std::vector<uint64_t> create_order(const CallGraph &cg);
     void run_on_cluster(cluster &c);
 };

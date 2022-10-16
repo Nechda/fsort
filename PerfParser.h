@@ -8,7 +8,11 @@
 struct PerfParser {
 
     using pair_string = std::pair<std::string, std::string>;
-    using FreqTable = std::map<pair_string, uint64_t>;
+    struct edge_info {
+      uint64_t cycles; 
+      uint64_t calls;
+    };
+    using FreqTable = std::map<pair_string, edge_info>;
 
     PerfParser(std::string_view command, uint64_t n_runs, uint64_t delta)
         : command_{command}, n_runs_{n_runs}, period_delta_{delta} {}

@@ -5,6 +5,82 @@
 #include <unordered_map>
 #include <vector>
 
+
+struct CallGraph {
+    struct Node {
+        std::string name;
+        uint64_t size;
+        uint64_t cycles;
+        double exec_prob;
+    };
+    struct Edge {
+        //caller -> callee
+        uint64_t caller_id;
+        uint64_t callee_id;
+        uint64_t weidth;
+        double jmp_prob;
+    };
+
+
+    std::vector<uint64_t> successors(uint64_t caller_id) const {
+        std::vector<uint64_t> ret;
+        for(auto edge_id : edges_sorted_caller_) {
+            if(edges_[edge_id].caller_id == caller_id) {
+                ret.push_back(edge_id);
+            }
+        }
+        return ret;
+    }
+
+    std::vector<uint64_t> predecessors(uint64_t callee_id) const {
+        std::vector<uint64_t> ret;
+        for(auto edge_id : edges_sorted_callee_) {
+            if(edges_[edge_id].callee_id == callee_id) {
+                ret.push_back(edge_id);
+            }
+        }
+        return ret;
+    }
+
+    void sort_edges() {
+        for (uint64_t i = 0; i < edges_.size(); i++) {
+            edges_sorted_caller_.push_back(i);
+            edges_sorted_callee_.push_back(i);
+        }
+        std::stable_sort(edges_sorted_caller_.begin(), edges_sorted_caller_.end(), [this](uint64_t a, uint64_t b){
+            return edges_[a].caller_id < edges_[b].caller_id;
+        });
+        std::stable_sort(edges_sorted_callee_.begin(), edges_sorted_callee_.end(), [this](uint64_t a, uint64_t b){
+            return edges_[a].callee_id < edges_[b].callee_id;
+        });
+    }
+
+    uint64_t get_total_cycles() const {
+        uint64_t ret = 0;
+        for (auto &node : nodes_) {
+            ret += node.cycles;
+        }
+        return ret;
+    }
+
+    void normalize_prob() {
+        auto total_cycles = get_total_cycles();
+        for (auto &node : nodes_) {
+            node.exec_prob = (double)node.cycles / (double)total_cycles;
+        }
+    }
+
+    uint64_t get_func_size(uint64_t func_id) const {
+        return nodes_[func_id].size;
+    }
+
+    std::vector<uint64_t> edges_sorted_caller_;
+    std::vector<uint64_t> edges_sorted_callee_;
+
+    std::vector<Node> nodes_;
+    std::vector<Edge> edges_;
+};
+
 struct node;
 struct edge;
 struct cluster;
@@ -25,10 +101,10 @@ struct edge {
     node *callee{nullptr};
 
     uint64_t freq = 0;
-    uint64_t miss = 0;
+    uint64_t cycles = 0;
 
     std::tuple<cluster *, cluster *, uint64_t, uint64_t> unpack_data() const {
-        return {caller->aux_, callee->aux_, freq, miss};
+        return {caller->aux_, callee->aux_, freq, cycles};
     }
 };
 

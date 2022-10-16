@@ -137,7 +137,8 @@ void update_table(FreqTable &table, const std::vector<Trace> &traces) {
         for (int i = 0; i < tr.size(); i++) {
             auto &j = tr[i];
             if (j.from != "[unknown]" && j.to != "[unknown]") {
-                table[{j.from, j.to}] += j.cycles;
+                table[{j.from, j.to}].cycles += j.cycles;
+                table[{j.from, j.to}].calls += 1;
             }
         }
     }
@@ -159,9 +160,9 @@ const std::string &get_formated_command(std::string_view command, uint64_t perio
 
 /*
     pattern of line:
-        `caller`/`callee`/`count`
+        `caller`/`callee`/`cycles`/`count`
     exmple:
-        foo/bar/10
+        foo/bar/32492/632
 */
 
 PerfParser::FreqTable PerfParser::read_from_file(std::string filename) {
@@ -169,13 +170,15 @@ PerfParser::FreqTable PerfParser::read_from_file(std::string filename) {
     std::string buf;
     FreqTable table;
     while (std::getline(in, buf)) {
-        auto start = buf.find_first_of('/');
-        auto stop = buf.find_last_of('/');
+        auto pos0 = buf.find_first_of('/');
+        auto pos1 = buf.find_first_of('/', pos0 + 1);
+        auto pos2 = buf.find_first_of('/', pos1 + 1);
 
-        auto caller = std::string(buf.substr(0, start));
-        auto callee = std::string(buf.substr(start + 1, stop - start - 1));
-        auto count = std::atoi(buf.substr(stop + 1).c_str());
-        table[{caller, callee}] = count;
+        auto caller = std::string(buf.substr(0, pos0));
+        auto callee = std::string(buf.substr(pos0 + 1, pos1 - pos0 - 1));
+        uint64_t cycles = std::atoi(buf.substr(pos1 + 1, pos2 - pos1 - 1).c_str());
+        uint64_t count = std::atoi(buf.substr(pos2 + 1).c_str());
+        table[{caller, callee}] = {cycles, count};
     }
     return table;
 }
@@ -195,8 +198,8 @@ PerfParser::FreqTable PerfParser::get_control_flow_graph(std::string output_file
     }
 
     std::ofstream output(output_filename);
-    for (auto &[arc, weidth] : table) {
-        output << arc.first << '/' << arc.second << '/' << weidth << '\n';
+    for (auto &[arc, edge_info] : table) {
+        output << arc.first << '/' << arc.second << '/' << edge_info.cycles << '/' << edge_info.calls << '\n';
     }
 
     return table;
