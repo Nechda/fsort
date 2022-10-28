@@ -18,5 +18,4 @@ struct FReorder {
     std::vector<edge *> edges_;
 
     void build_cfg();
-    void run_on_cluster(cluster &c);
 };

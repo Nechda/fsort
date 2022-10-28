@@ -1,5 +1,6 @@
 #include "FReorder.h"
 
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -11,13 +12,13 @@ constexpr int CLUSTER_THRESHOLD = 0x1000 * 64;
 void FReorder::build_cfg() {
     /* Declare node for each function, readed from final binary */
     for (const auto &func : symtable_) {
-        vertices_.push_back({func.name, func.size, nullptr});
+        vertices_.push_back({func.name, func.size, 0, nullptr, {}});
     }
 
     /* Make map for fast searching node by the function name */
     std::unordered_map<std::string, node *> f2n; // func to node
     for (auto &node : vertices_) {
-        f2n[node.name_] = &node;
+        f2n[node.name] = &node;
     }
 
     /* Adjust edges in cfg */
@@ -32,14 +33,15 @@ void FReorder::build_cfg() {
         auto e = new edge();
         e->caller = f2n[caller];
         e->callee = f2n[callee];
-        e->freq = pp;
+        e->weidth = pp.calls;
+        e->cycles = pp.cycles;
 
         edges_.push_back(e);
     }
 
     /* After each edges was created, attach it no nodes */
     for (auto e : edges_) {
-        e->callee->callers_.push_back(e);
+        e->callee->callers.push_back(e);
     }
 }
 
@@ -53,29 +55,30 @@ void FReorder::run(std::string_view ouput_file) && {
         clusters[i] = new cluster();
         clusters[i]->add_function_node(&vertices_[i]);
         clusters[i]->ID = i;
-        vertices_[i].aux_ = clusters[i];
+        vertices_[i].aux = clusters[i];
     }
 
     // Step 3. Insert edges between clusters that have a profile.
     std::vector<cluster_edge *> cedges;
     for (auto &cluster : clusters) {
-        for (auto function_node : cluster->functions_) {
-            for (auto &edge : function_node->callers_) {
-                auto [caller_cluster, callee_cluster, freq, miss] = edge->unpack_data();
+        for (auto function_node : cluster->functions) {
+            for (auto &edge : function_node->callers) {
+                auto caller_cluster = edge->caller->aux;
+                auto callee_cluster = edge->callee->aux;
 
-                caller_cluster->freq_ += freq;
-                caller_cluster->misses_ += miss;
+                caller_cluster->cycles += edge->cycles;
 
                 auto cedge = callee_cluster->get(caller_cluster);
-                if (cedge != nullptr) {
-                    cedge->m_count += freq;
-                    cedge->misses_ += miss;
-                } else {
-                    auto cedge = new cluster_edge(caller_cluster, callee_cluster, freq, miss);
+                if (cedge == nullptr) {
+                    cedge = new cluster_edge();
+                    cedge->caller = caller_cluster;
+                    cedge->callee = callee_cluster;
+
                     cedges.push_back(cedge);
                     cedge->ID = cedges.size();
                     callee_cluster->put(caller_cluster, cedge);
                 }
+                cedge->weidth += edge->weidth;
             }
         }
     }
@@ -95,48 +98,29 @@ void FReorder::run(std::string_view ouput_file) && {
     while (!heap.empty()) {
         auto cedge = extract_max();
 
-        auto caller = cedge->m_caller;
-        auto callee = cedge->m_callee;
+        auto caller = cedge->caller;
+        auto callee = cedge->callee;
 
         if (caller == callee)
             continue;
 
-        if (caller->m_size + callee->m_size > CLUSTER_THRESHOLD)
+        if (caller->size + callee->size > CLUSTER_THRESHOLD)
             continue;
 
         cluster::merge_to_caller(caller, callee);
+        for (auto edge : heap) {
+            if (edge->caller == callee) {
+                edge->caller = caller;
+            }
+        }
     }
 
     // Step 6. Sort the candidate clusters.
     std::sort(clusters.begin(), clusters.end(), cluster::comparator);
 
-    // Step 7. Reconnect function to their clusters
-    for (auto &cluster : clusters) {
-        for (auto function_node : cluster->functions_) {
-            function_node->aux_ = cluster;
-            function_node->freq_ = 0;
-        }
-    }
-
-    // Step 8. Recalculate edge frequencies
-    std::map<std::pair<node *, node *>, edge *> f2e;
-    for (auto e : edges_) {
-        if (e->caller->aux_ == e->callee->aux_) {
-            e->caller->freq_ += e->freq;
-            f2e[{e->caller, e->callee}] = e;
-        }
-    }
-
-    // Step 9. Do local reordering for each cluster.
-    for (auto &c : clusters) {
-        run_on_cluster(*c);
-    }
-
-    // Step 10. Write final order into file
     std::ofstream output(std::string(ouput_file), std::ios::out);
     for (auto &c : clusters) {
-        c->print(std::cerr, false); /* only_funcs = false */
-        c->print(output, true);     /* only_funcs = true */
+        c->print(output, true); /* only_funcs = true */
     }
 
     /* Release memory */

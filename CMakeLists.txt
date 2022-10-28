@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 project(fsort)
 
 set(SOURCES
-    Annealing.cpp
     main.cpp
     PerfParser.cpp
     NMParser.cpp
