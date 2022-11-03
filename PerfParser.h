@@ -14,8 +14,8 @@ struct PerfParser {
     };
     using FreqTable = std::map<pair_string, edge_info>;
 
-    PerfParser(std::string_view command, uint64_t n_runs, uint64_t delta)
-        : command_{command}, n_runs_{n_runs}, period_delta_{delta} {}
+    PerfParser(std::string_view command, std::string_view exec_file, uint64_t n_runs, uint64_t delta)
+        : command_{command}, exec_file_{exec_file}, n_runs_{n_runs}, period_delta_{delta} {}
 
     FreqTable get_control_flow_graph(std::string output_filename) &&;
 
@@ -23,6 +23,7 @@ struct PerfParser {
 
   private:
     std::string_view command_;
+    std::string_view exec_file_;
     uint64_t n_runs_;
     uint64_t period_delta_;
 };

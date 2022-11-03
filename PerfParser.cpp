@@ -26,6 +26,8 @@ struct Jump {
 };
 
 struct Trace {
+    static std::string exec_filter;
+
   private:
     std::array<Jump, 32U> stack_;
     int size_ = 0;
@@ -46,6 +48,7 @@ struct Trace {
     friend std::istream &operator>>(std::istream &in, Trace &trace);
     [[maybe_unused]] friend std::ostream &operator<<(std::ostream &out, const Trace &trace);
 };
+std::string Trace::exec_filter;
 
 using FreqTable = PerfParser::FreqTable;
 
@@ -72,7 +75,7 @@ std::istream &operator>>(std::istream &in, Trace &trace) {
     in >> comm >> event;
     std::string jump_event;
     for (; in >> jump_event;) {
-        if (comm != "cc1plus")
+        if (!Trace::exec_filter.empty() && Trace::exec_filter.find(comm) == std::string::npos)
             continue;
 
         auto [a, b, cycles] = extract_br(jump_event);
@@ -185,6 +188,7 @@ PerfParser::FreqTable PerfParser::read_from_file(std::string filename) {
 
 PerfParser::FreqTable PerfParser::get_control_flow_graph(std::string output_filename) && {
     FreqTable table;
+    Trace::exec_filter = exec_file_;
     for (uint64_t i = 0; i < n_runs_; i++) {
         constexpr uint64_t LOW_PERIOD = 250'000;
         auto period = LOW_PERIOD + i * period_delta_;

@@ -11,6 +11,7 @@ struct Config {
     std::string binary_file;
     std::string output_file;
     std::string command;
+    std::string exec_file;
     int repeat_times;
     int delta;
 
@@ -23,6 +24,9 @@ struct Config {
         }
         if (key == "--command") {
             command = value;
+        }
+        if (key == "--exec-file") {
+            exec_file = value;
         }
         if (key == "--runs") {
             auto result = std::from_chars(value.data(), value.data() + value.size(), repeat_times);
@@ -91,8 +95,8 @@ int main(int argc, char **argv) {
     if (std::filesystem::exists(SAVED_PROFILE_FILE)) {
         freq_table = PerfParser::read_from_file(SAVED_PROFILE_FILE);
     } else {
-        freq_table =
-            PerfParser(config.command, config.repeat_times, config.delta).get_control_flow_graph(SAVED_PROFILE_FILE);
+        freq_table = PerfParser(config.command, config.exec_file, config.repeat_times, config.delta)
+                         .get_control_flow_graph(SAVED_PROFILE_FILE);
     }
 
     FReorder(std::move(symbols), std::move(freq_table)).run(config.output_file);
