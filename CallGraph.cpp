@@ -5,9 +5,7 @@ void cluster::merge_to_caller(cluster *caller, cluster *callee) {
     caller->cycles += callee->cycles;
 
     /* Append all cgraph_nodes from callee to caller.  */
-    for (unsigned i = 0; i < callee->functions.size(); i++) {
-        caller->functions.push_back(callee->functions[i]);
-    }
+    caller->functions.insert(caller->functions.end(), callee->functions.begin(), callee->functions.end());
 
     callee->functions.clear();
     callee->size = 0;

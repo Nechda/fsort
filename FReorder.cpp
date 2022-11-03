@@ -1,10 +1,6 @@
 #include "FReorder.h"
 
-#include <cmath>
-#include <filesystem>
 #include <fstream>
-#include <iostream>
-#include <map>
 #include <unordered_map>
 
 constexpr int CLUSTER_THRESHOLD = 0x1000 * 64;
