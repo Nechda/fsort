@@ -92,6 +92,7 @@ cmake -GNinja .. && ninja
 # Генерация оптимального порядка
 CC1PLUS="$INSTALL_DIR/libexec/gcc/x86_64-pc-linux-gnu/9.4.0/cc1plus"
 ./fsort --binary=$CC1PLUS --output=sorted.out --runs=64 --delta=1 \
+--exec-file='cc1plus' \
 --command="$INSTALL_DIR/bin/g++ -w $PROJECT_TOP/benchmarks/tramp3d-v4.cpp -o /dev/null"
 
 # ================================================
