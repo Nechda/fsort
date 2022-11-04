@@ -1,5 +1,5 @@
 cd gcc
-g++ -no-pie -g -O2 -flto -freorder-functions -fplugin=~/gcc-patched/reorder_plugin/c3-ipa.so \
+g++ -no-pie -g -O2 -flto -freorder-functions -fplugin=$PLUGIN_SO \
  -DIN_GCC -fno-exceptions -fno-rtti -fasynchronous-unwind-tables -W -Wall -Wno-narrowing \
  -Wwrite-strings -Wcast-qual -Wmissing-format-attribute -Woverloaded-virtual -pedantic \
  -Wno-long-long -Wno-variadic-macros -Wno-overlength-strings -DHAVE_CONFIG_H -static-libstdc++ \
@@ -14,6 +14,6 @@ g++ -no-pie -g -O2 -flto -freorder-functions -fplugin=~/gcc-patched/reorder_plug
  c-family/c-semantics.o c-family/c-ada-spec.o c-family/c-ubsan.o c-family/known-headers.o c-family/c-attribs.o \
  c-family/c-warn.o c-family/c-spellcheck.o i386-c.o glibc-c.o cc1plus-checksum.o libbackend.a main.o libcommon-target.a \
  libcommon.a ../libcpp/libcpp.a ../libdecnumber/libdecnumber.a libcommon.a ../libcpp/libcpp.a ../libbacktrace/.libs/libbacktrace.a \
- ../libiberty/libiberty.a ../libdecnumber/libdecnumber.a -L~/gcc-patched/gcc-build/./isl/.libs -lisl \
- -L~/gcc-patched/gcc-build/./gmp/.libs -L~/gcc-patched/gcc-build/./mpfr/src/.libs \
- -L~/gcc-patched/gcc-build/./mpc/src/.libs -lmpc -lmpfr -lgmp -rdynamic -ldl -L./../zlib -lz
+ ../libiberty/libiberty.a ../libdecnumber/libdecnumber.a -L$GCC_BUILD_DIR/./isl/.libs -lisl \
+ -L$GCC_BUILD_DIR/./gmp/.libs -L$GCC_BUILD_DIR/./mpfr/src/.libs \
+ -L$GCC_BUILD_DIR/./mpc/src/.libs -lmpc -lmpfr -lgmp -rdynamic -ldl -L./../zlib -lz
