@@ -1,0 +1,5 @@
+00400000-00a68000 r--p 00000000 08:10 882707                             /home/dmitry/gcc-exp/bld/gcc/cc1plus
+00a68000-0335c000 r-xp 00668000 08:10 882707                             /home/dmitry/gcc-exp/bld/gcc/cc1plus
+0335c000-04320000 r--p 02f5c000 08:10 882707                             /home/dmitry/gcc-exp/bld/gcc/cc1plus
+04321000-04325000 r--p 03f20000 08:10 882707                             /home/dmitry/gcc-exp/bld/gcc/cc1plus
+04325000-04336000 rw-p 03f24000 08:10 882707                             /home/dmitry/gcc-exp/bld/gcc/cc1plus
