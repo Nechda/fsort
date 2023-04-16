@@ -12,6 +12,9 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h>
+#include <filesystem>
+
 namespace {
 
 struct Jump {
@@ -97,10 +100,11 @@ std::ostream &operator<<(std::ostream &out, const Trace &trace) {
     return out;
 }
 
-std::vector<Trace> read_traces() {
+std::vector<Trace> read_traces(std::string filename) {
     std::vector<Trace> traces;
     std::string buf;
-    while (std::getline(std::cin, buf)) {
+    std::ifstream input_file(filename);
+    while (std::getline(input_file, buf)) {
         Trace t;
         std::stringstream(buf) >> t;
         traces.push_back(t);
@@ -109,6 +113,14 @@ std::vector<Trace> read_traces() {
 }
 
 std::vector<Trace> execute() {
+    int ret_code = system("perf script -F comm,event,brstacksym --no-demangle > tmp.file");
+    if (ret_code != 0) {
+        throw std::runtime_error("Bad pipe open");
+    }
+
+    return read_traces("tmp.file");
+
+    #if 0
     constexpr int WRITE_END = 1;
     constexpr int READ_END = 0;
     pid_t pid;
@@ -133,18 +145,22 @@ std::vector<Trace> execute() {
         waitpid(pid, &status, 0);
     }
     return traces;
+    #endif
 }
 
 void update_table(FreqTable &table, const std::vector<Trace> &traces) {
+    bool updated = false;
     for (const auto &tr : traces) {
         for (int i = 0; i < tr.size(); i++) {
             auto &j = tr[i];
             if (j.from != "[unknown]" && j.to != "[unknown]") {
+                updated = true;
                 table[{j.from, j.to}].cycles += j.cycles;
                 table[{j.from, j.to}].calls += 1;
             }
         }
     }
+    std::cerr << "Updating table ...\n" << "  new traces: " << traces.size() << "  updated: " << (updated ? "true" : "false") << '\n';
 }
 
 const std::string &get_formated_command(std::string_view command, uint64_t period) {
@@ -191,12 +207,15 @@ PerfParser::FreqTable PerfParser::get_control_flow_graph(std::string output_file
     Trace::exec_filter = exec_file_;
     for (uint64_t i = 0; i < n_runs_; i++) {
         constexpr uint64_t LOW_PERIOD = 250'000;
-        auto period = LOW_PERIOD + i * period_delta_;
+        auto period = LOW_PERIOD + i * period_delta_ / 16;
         std::cout << "[" << (i + 1) << "/" << n_runs_ << "] run, period = " << period << std::endl;
+
         auto ret_code = system(get_formated_command(command_, period).c_str());
         if (ret_code != 0) {
             throw "Perf record failed";
         }
+        std::cerr << "Exec fork\n";
+
         auto traces = execute();
         update_table(table, traces);
     }

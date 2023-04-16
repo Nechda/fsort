@@ -48,6 +48,7 @@ struct Config {
         std::cout << "File with symbols: " << binary_file << std::endl;
         std::cout << "Output file: " << output_file << std::endl;
         std::cout << "Total runs: " << repeat_times << std::endl;
+        std::cout << "Exec file filter: " << exec_file << std::endl;
     }
 };
 
