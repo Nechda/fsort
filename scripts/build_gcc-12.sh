@@ -14,8 +14,8 @@ echo "  ok" >> $STATE_FILE
 # Применяем патчи и скачиываем либы
 echo "apply patches" >> $STATE_FILE
 cd src
-wget https://raw.githubusercontent.com/Nechda/fsort/master/patched-gcc/gcc-12.p
-patch -p1 < gcc-12.p
+wget https://raw.githubusercontent.com/Nechda/fsort/master/patches/gcc-12.2.0.patch
+patch -p1 < gcc-12.2.0.patch
 ./contrib/download_prerequisites
 cd $TOP
 echo "  ok" >> $STATE_FILE
