@@ -57,7 +57,7 @@ echo "  make install -> ok" >> $STATE_FILE
 cd $TOP
 
 # Копируем репозиторий с утилитой
-git clone https://github.com/Nechda/fsort.git f-src
+git clone --recursive https://github.com/Nechda/fsort.git f-src
 
 # Собираем плагин
 echo "Build plugin" >> $STATE_FILE
