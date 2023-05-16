@@ -1,4 +1,4 @@
-g++ -no-pie -flto -freorder-functions -fplugin=$PLUGIN_SO \
+g++ -no-pie -flto=jobserver -freorder-functions -fplugin=$PLUGIN_SO \
     -DIN_GCC -fno-exceptions -fno-rtti -fasynchronous-unwind-tables \
     -W -Wall -Wno-narrowing -Wwrite-strings -Wcast-qual -Wmissing-format-attribute -Woverloaded-virtual \
     -pedantic -Wno-long-long -Wno-variadic-macros -Wno-overlength-strings \

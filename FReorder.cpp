@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <unordered_map>
+#include <algorithm>
 
 constexpr int CLUSTER_THRESHOLD = 0x1000 * 64;
 
