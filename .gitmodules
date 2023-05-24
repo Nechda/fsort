@@ -1,3 +1,4 @@
 [submodule "perf-visualizer"]
 	path = perf-visualizer
 	url = https://github.com/Nechda/perf-visualizer
+	branch = master
